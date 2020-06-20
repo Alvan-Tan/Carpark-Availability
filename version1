@@ -1,0 +1,47 @@
+import requests
+import pandas as pd
+import plotly.express as px
+
+# Function to get JSON Data from api end-point
+
+def getJSONData (apiURL):
+    response = requests.get(
+        apiURL,
+        verify = True,  # Verify SSL certificate
+    )
+    
+    response.raise_for_status() # optional, checking for errors
+
+    return(response.json())
+
+
+# Getting data from API
+
+apiURL = "https://api.data.gov.sg/v1/transport/carpark-availability"
+carparkAvailabilityData = getJSONData(apiURL)
+
+# Extracting data and placing them in pandas format 
+timestamp = carparkAvailabilityData["items"][0]["timestamp"]
+datas = carparkAvailabilityData["items"][0]["carpark_data"]
+
+carpark_info = []
+carpark_number = []
+update_datetime = []
+for data in datas:
+  carpark_info.append(data["carpark_info"][0])
+  carpark_number.append(data["carpark_number"])
+  update_datetime.append(data["update_datetime"])
+
+df1 = pd.DataFrame(carpark_info)
+df1["carpark_number"] = carpark_number
+df1["update_datetime"] = update_datetime
+
+#Constructing graph to display data
+
+graph = px.bar(df1, x="carpark_number", y="lots_available", title=f"Lots Available at different carparks ({timestamp})")
+graph.show()
+
+
+#partial code structure from <oding lab
+#data from data.gov.sg
+#real time data is used, hence graph might differ with each run
